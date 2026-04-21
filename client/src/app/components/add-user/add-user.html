@@ -1,0 +1,159 @@
+<!-- src/app/add-user/add-user.component.html -->
+<div class="add-user-container">
+  <div class="form-header">
+    <h1>Create New User</h1>
+    <p>Fill in the details below to add a team member</p>
+  </div>
+
+  <form [formGroup]="userForm" (ngSubmit)="onSubmit()" class="user-form">
+    <!-- Basic Information Section -->
+    <div class="form-section">
+      <h2>Basic Information</h2>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Full Name *</label>
+          <input type="text" formControlName="fullName" placeholder="John Doe" class="form-control">
+          <div class="error-message" *ngIf="f['fullName'].invalid && f['fullName'].touched">
+            <span *ngIf="f['fullName'].errors?.['required']">Full name is required</span>
+            <span *ngIf="f['fullName'].errors?.['minlength']">Minimum 3 characters</span>
+            <span *ngIf="f['fullName'].errors?.['lettersAndSpaces']">Only letters and spaces allowed</span>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>Email *</label>
+          <input type="email" formControlName="email" placeholder="john@example.com" class="form-control">
+          <div class="error-message" *ngIf="f['email'].invalid && f['email'].touched">
+            <span *ngIf="f['email'].errors?.['required']">Email required</span>
+            <span *ngIf="f['email'].errors?.['email']">Valid email required</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label>Phone Number *</label>
+          <input type="tel" formControlName="phoneNumber" maxlength="10" placeholder="1234567890" class="form-control">
+          <div class="error-message" *ngIf="f['phoneNumber'].invalid && f['phoneNumber'].touched">
+            <span *ngIf="f['phoneNumber'].errors?.['required']">Phone number required</span>
+            <span *ngIf="f['phoneNumber'].errors?.['pattern']">Exactly 10 digits required</span>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>Username *</label>
+          <input type="text" formControlName="username" placeholder="john_doe" class="form-control">
+          <div class="error-message" *ngIf="f['username'].invalid && f['username'].touched">
+            <span *ngIf="f['username'].errors?.['required']">Username required</span>
+            <span *ngIf="f['username'].errors?.['minlength']">Minimum 4 characters</span>
+            <span *ngIf="f['username'].errors?.['containsSpaces']">No spaces allowed</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Authentication Section -->
+    <div class="form-section">
+      <h2>Authentication</h2>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Password *</label>
+          <input type="password" formControlName="password" placeholder="••••••" class="form-control">
+          <div class="error-message" *ngIf="f['password'].invalid && f['password'].touched">
+            <span *ngIf="f['password'].errors?.['required']">Password required</span>
+            <span *ngIf="f['password'].errors?.['minlength']">Minimum 6 characters</span>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>Confirm Password *</label>
+          <input type="password" formControlName="confirmPassword" placeholder="••••••" class="form-control">
+          <div class="error-message" *ngIf="userForm.errors?.['mismatch'] && f['confirmPassword'].touched">
+            Passwords do not match
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Role & Organization -->
+    <div class="form-section">
+      <h2>Role & Organization</h2>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Role *</label>
+          <select formControlName="role" class="form-control">
+            <option value="" disabled>Select role</option>
+            <option *ngFor="let role of roles" [value]="role">{{ role }}</option>
+          </select>
+          <div class="error-message" *ngIf="f['role'].invalid && f['role'].touched">Role is required</div>
+        </div>
+
+        <div class="form-group">
+          <label>Department *</label>
+          <select formControlName="department" class="form-control">
+            <option value="" disabled>Select department</option>
+            <option *ngFor="let dept of departments" [value]="dept">{{ dept }}</option>
+          </select>
+          <div class="error-message" *ngIf="f['department'].invalid && f['department'].touched">Department required</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Status & Joining -->
+    <div class="form-section">
+      <h2>Status & Joining</h2>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Status *</label>
+          <select formControlName="status" class="form-control">
+            <option value="Active">Active</option>
+            <option value="Inactive">Inactive</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label>Joining Date *</label>
+          <input type="date" formControlName="joiningDate" [max]="todayDate" class="form-control">
+          <div class="error-message" *ngIf="f['joiningDate'].invalid && f['joiningDate'].touched">
+            <span *ngIf="f['joiningDate'].errors?.['required']">Joining date required</span>
+            <span *ngIf="f['joiningDate'].errors?.['futureDate']">Date cannot be in future</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Profile Image -->
+    <div class="form-section">
+      <h2>Profile Image</h2>
+      <div class="image-upload-area">
+        <div class="image-preview" *ngIf="imagePreview">
+          <img [src]="imagePreview" alt="Preview">
+          <button type="button" class="remove-img" (click)="imagePreview=null; selectedImageFile=null">✖</button>
+        </div>
+        <div class="upload-placeholder" *ngIf="!imagePreview">
+          <label for="profileImage" class="upload-label">
+            Click to upload image
+            <input type="file" id="profileImage" accept="image/*" (change)="onFileSelected($event)" hidden>
+          </label>
+          <small>PNG, JPG, JPEG (max 5MB)</small>
+        </div>
+      </div>
+    </div>
+
+    <!-- Address -->
+    <div class="form-section">
+      <h2>Address</h2>
+      <div class="form-group">
+        <textarea formControlName="address" rows="3" placeholder="Office address or home address..." class="form-control" maxlength="200"></textarea>
+        <div class="char-counter">{{ (userForm.get('address')?.value?.length || 0) }}/200</div>
+        <div class="error-message" *ngIf="f['address'].errors?.['maxlength'] && f['address'].touched">Maximum 200 characters</div>
+      </div>
+    </div>
+
+    <!-- Submit -->
+    <div class="form-actions">
+      <button type="button" class="btn-secondary" (click)="userForm.reset({ status: 'Active' }); imagePreview=null; selectedImageFile=null">Reset</button>
+      <button type="submit" class="btn-primary" [disabled]="userForm.invalid">Create User</button>
+    </div>
+  </form>
+</div>

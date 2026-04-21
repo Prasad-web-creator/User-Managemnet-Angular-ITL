@@ -1,0 +1,61 @@
+<!-- src/app/app.component.html -->
+<div class="app-container" [class.no-sidebar]="!showSidebar" [class.mobile-menu-open]="isMobileMenuOpen">
+  
+  <!-- Mobile Header (Visible < 750px and only when menu is CLOSED) -->
+  <header class="mobile-header" *ngIf="showSidebar && !isMobileMenuOpen">
+    <button class="toggle-btn" (click)="toggleMobileMenu()">
+      <fa-icon [icon]="menuIcon"></fa-icon>
+    </button>
+    <div class="mobile-logo">UserHub</div>
+  </header>
+
+
+  <aside class="sidebar" *ngIf="showSidebar" [class.open]="isMobileMenuOpen">
+    <div class="sidebar-header">
+      <div class="logo">
+        <h2>UserHub</h2>
+      </div>
+      <button class="close-btn" (click)="toggleMobileMenu()">
+        <fa-icon [icon]="closeIcon"></fa-icon>
+      </button>
+    </div>
+
+    <nav class="nav-menu">
+      <a routerLink="/dashboard" routerLinkActive="active" class="nav-item" (click)="isMobileMenuOpen = false">
+        <fa-icon [icon]="dashboardIcon" class="icon"></fa-icon>
+        <span>Dashboard</span>
+      </a>
+      <a routerLink="/users" routerLinkActive="active" class="nav-item" (click)="isMobileMenuOpen = false">
+        <fa-icon [icon]="usersIcon" class="icon"></fa-icon>
+        <span>Users</span>
+      </a>
+      <a routerLink="/add-user" routerLinkActive="active" class="nav-item" (click)="isMobileMenuOpen = false" *ngIf="isAdmin">
+        <fa-icon [icon]="addUserIcon" class="icon"></fa-icon>
+        <span>Add User</span>
+      </a>
+
+    </nav>
+    
+    <div class="sidebar-footer">
+      <div class="user-profile" *ngIf="currentUser">
+        <div class="user-avatar">{{ currentUser.fullName?.charAt(0) }}</div>
+        <div class="user-info">
+          <span class="username">{{ currentUser.fullName }}</span>
+          <span class="user-role">{{ currentUser.role }} • {{ currentUser.department || 'General' }}</span>
+        </div>
+
+      </div>
+
+      <a (click)="logout()" class="nav-item logout-item">
+        <fa-icon [icon]="logoutIcon" class="icon"></fa-icon>
+        <span>Logout</span>
+      </a>
+    </div>
+  </aside>
+
+  <div class="overlay" *ngIf="isMobileMenuOpen" (click)="toggleMobileMenu()"></div>
+
+  <main class="main-content">
+    <router-outlet></router-outlet>
+  </main>
+</div>

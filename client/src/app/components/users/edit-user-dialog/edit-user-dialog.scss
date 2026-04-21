@@ -1,0 +1,18 @@
+    .edit-form {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      padding-top: 10px;
+      min-width: 450px;
+    }
+    .row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 15px;
+    }
+    mat-form-field {
+      width: 100%;
+    }
+    mat-dialog-content {
+      overflow-x: hidden;
+    }

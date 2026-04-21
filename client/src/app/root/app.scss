@@ -1,0 +1,335 @@
+// Vuexy App Component - Main Layout Styles
+
+.app-container {
+  display: flex;
+  height: 100vh;
+  width: 100vw;
+  overflow: hidden;
+  background: var(--gray-100);
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  position: relative;
+}
+
+// Sidebar Navigation
+.sidebar {
+  width: 260px;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: linear-gradient(180deg, #2d3748 0%, #1a202c 100%);
+  color: var(--white);
+  padding: 1.5rem 0;
+  box-shadow: var(--shadow-lg);
+  transition: all 0.3s ease;
+  overflow: hidden;
+  border-right: 1px solid rgba(255, 255, 255, 0.05);
+
+  .logo {
+    padding: 0 1.5rem;
+    margin-bottom: 2rem;
+    flex-shrink: 0;
+
+    h2 {
+      font-weight: 700;
+      font-size: 1.5rem;
+      letter-spacing: -0.5px;
+      color: #ffffff;
+    }
+  }
+
+  .nav-menu {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    padding: 0 0.75rem;
+    overflow-y: auto;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(255, 255, 255, 0.1) transparent;
+
+    &::-webkit-scrollbar {
+      width: 4px;
+    }
+
+    &::-webkit-scrollbar-thumb {
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 10px;
+    }
+
+    .nav-item {
+      display: flex;
+      align-items: center;
+      gap: 0.875rem;
+      padding: 0.875rem 1rem;
+      border-radius: 8px;
+      color: rgba(255, 255, 255, 0.7);
+      text-decoration: none;
+      font-weight: 500;
+      transition: all 0.2s ease;
+      font-size: 0.9375rem;
+      cursor: pointer;
+
+      .icon {
+        font-size: 1.25rem;
+        flex-shrink: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 1.5rem;
+        height: 1.5rem;
+      }
+
+      &:hover {
+        background: rgba(255, 255, 255, 0.1);
+        color: var(--white);
+      }
+
+      &.active {
+        background: linear-gradient(95deg, var(--primary), var(--primary-dark));
+        color: var(--white);
+        box-shadow: 0 4px 12px rgba(124, 58, 237, 0.3);
+        font-weight: 600;
+      }
+    }
+  }
+
+  .sidebar-footer {
+    padding: 1rem 0.75rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    flex-shrink: 0;
+    
+    .logout-item {
+      display: flex;
+      align-items: center;
+      gap: 0.875rem;
+      padding: 0.875rem 1rem;
+      border-radius: 8px;
+      color: #feb2b2;
+      text-decoration: none;
+      font-weight: 500;
+      transition: all 0.2s ease;
+      font-size: 0.9375rem;
+      cursor: pointer;
+      margin-top: 0.5rem;
+
+      &:hover {
+        background: rgba(245, 101, 101, 0.1);
+        color: #fc8181;
+      }
+    }
+
+    .user-profile {
+      padding: 0.75rem 1rem;
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      margin-bottom: 0.25rem;
+
+      .user-avatar {
+        width: 38px;
+        height: 38px;
+        border-radius: 50%;
+        background: var(--primary);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 700;
+        font-size: 1.1rem;
+        color: white;
+        border: 2px solid rgba(255, 255, 255, 0.1);
+        flex-shrink: 0;
+      }
+
+      .user-info {
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+
+        .username {
+          font-size: 0.9375rem;
+          font-weight: 600;
+          color: #ffffff;
+          white-space: nowrap;
+          text-overflow: ellipsis;
+          overflow: hidden;
+        }
+
+        .user-role {
+          font-size: 0.75rem;
+          color: rgba(255, 255, 255, 0.6);
+          text-transform: capitalize;
+          white-space: nowrap;
+          text-overflow: ellipsis;
+          overflow: hidden;
+        }
+      }
+    }
+  }
+}
+
+
+
+// Main Content Area
+.main-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+  background: var(--gray-100);
+  transition: all 0.3s ease;
+}
+
+// Mobile Header (Hidden by default, shown < 750px)
+.mobile-header {
+  display: none;
+  height: 64px;
+  background: var(--white);
+  border-bottom: 1px solid var(--gray-200);
+  padding: 0 1.5rem;
+  align-items: center;
+  justify-content: space-between; // Spread items to edges
+  width: 100%;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+  z-index: 1000;
+  position: sticky;
+  top: 0;
+
+  .toggle-btn {
+    background: var(--gray-100);
+    border: none;
+    font-size: 1.125rem;
+    color: var(--primary);
+    cursor: pointer;
+    width: 42px;
+    height: 42px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 10px;
+    transition: all 0.2s;
+    order: 2; // Move toggle to the right
+
+    &:hover {
+      background: var(--primary);
+      color: var(--white);
+    }
+  }
+
+  .mobile-logo {
+    font-weight: 800;
+    font-size: 1.5rem;
+    color: var(--primary);
+    letter-spacing: -1px;
+    order: 1; // Logo on the left
+  }
+}
+
+
+// Sidebar Header (Close button only for mobile)
+.sidebar-header {
+  display: none;
+  padding: 1.5rem;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+
+  .logo {
+    padding: 0; // Remove redundant padding
+    margin: 0; // Remove margin for header usage
+    
+    h2 {
+      margin: 0;
+      font-size: 1.5rem;
+      line-height: 1;
+    }
+  }
+
+  .close-btn {
+    background: none;
+    border: none;
+    color: var(--white);
+    font-size: 1.25rem;
+    cursor: pointer;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+  }
+}
+
+
+
+
+// Overlay
+.overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0, 0, 0, 0.4); // Slightly lighter tint
+  z-index: 999;
+  backdrop-filter: blur(5px); // Stronger blur
+  animation: fadeIn 0.3s ease;
+}
+
+
+// Responsive Design logic for < 750px
+@media (max-width: 750px) {
+  .app-container {
+    flex-direction: column; // Stack header and content vertically
+  }
+
+  .mobile-header {
+    display: flex;
+  }
+
+  .main-content {
+    padding: 1rem; // Add back padding for mobile content
+  }
+
+  .sidebar {
+    position: fixed;
+    top: 0;
+    left: -280px; // Start off-screen
+    z-index: 1001;
+    width: 280px;
+    height: 100vh;
+    transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 20px 0 50px rgba(0,0,0,0.3);
+
+    &.open {
+      left: 0; // Slide in
+    }
+
+    .sidebar-header {
+      display: flex;
+    }
+  }
+
+  .sidebar.collapsed {
+    width: 280px; // Reset collapsed width on mobile if any
+  }
+}
+
+// Scrollbar Styling
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--gray-200);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--gray-300);
+  border-radius: 4px;
+
+  &:hover {
+    background: var(--gray-500);
+  }
+}

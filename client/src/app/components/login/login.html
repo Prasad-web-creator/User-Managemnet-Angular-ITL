@@ -1,0 +1,57 @@
+<div class="login-container">
+  <div class="login-card">
+    <div class="login-header">
+      <h2>Welcome Back</h2>
+      <p>Sign in to your account</p>
+    </div>
+
+    <form (ngSubmit)="onLogin()" #loginForm="ngForm" class="login-form">
+      <div class="input-group">
+        <label for="username">Username</label>
+        <div class="input-wrapper">
+          <fa-icon [icon]="faUser" class="input-icon"></fa-icon>
+          <input 
+            type="text" 
+            id="username" 
+            name="username" 
+            [(ngModel)]="username" 
+            required 
+            placeholder="Enter your username"
+            autocomplete="off"
+          />
+        </div>
+      </div>
+
+      <div class="input-group">
+        <label for="password">Password</label>
+        <div class="input-wrapper">
+          <fa-icon [icon]="faLock" class="input-icon"></fa-icon>
+          <input 
+            [type]="showPassword ? 'text' : 'password'" 
+            id="password" 
+            name="password" 
+            [(ngModel)]="password" 
+            required 
+            placeholder="Enter your password"
+          />
+          <button type="button" class="password-toggle" (click)="togglePassword()">
+            <fa-icon [icon]="showPassword ? faEyeSlash : faEye"></fa-icon>
+          </button>
+        </div>
+
+      </div>
+
+      <div class="error-message" *ngIf="errorMessage">
+        {{ errorMessage }}
+      </div>
+
+      <button type="submit" class="login-btn" [disabled]="!loginForm.valid || isLoading">
+        <span>{{ isLoading ? 'Loading...' : 'Login' }}</span>
+      </button>
+
+      <div class="login-footer">
+        <a routerLink="/forgot-password" class="forgot-password">Forgot Password?</a>
+      </div>
+    </form>
+  </div>
+</div>

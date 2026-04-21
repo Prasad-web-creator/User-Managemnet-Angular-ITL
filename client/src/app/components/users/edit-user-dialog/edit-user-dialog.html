@@ -1,0 +1,57 @@
+<h2 mat-dialog-title>Edit User</h2>
+<mat-dialog-content>
+  <form [formGroup]="editForm" class="edit-form">
+    <mat-form-field appearance="outline">
+      <mat-label>Full Name</mat-label>
+      <input matInput formControlName="fullName" placeholder="Enter full name">
+      <mat-error *ngIf="editForm.get('fullName')?.hasError('required')">Full name is required</mat-error>
+      <mat-error *ngIf="editForm.get('fullName')?.hasError('minlength')">Minimum 3 characters required</mat-error>
+      <mat-error *ngIf="editForm.get('fullName')?.hasError('lettersAndSpaces')">Only letters and spaces allowed</mat-error>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>Email</mat-label>
+      <input matInput formControlName="email" type="email" placeholder="Enter email address">
+      <mat-error *ngIf="editForm.get('email')?.hasError('required')">Email is required</mat-error>
+      <mat-error *ngIf="editForm.get('email')?.hasError('email')">Please enter a valid email</mat-error>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>Phone Number</mat-label>
+      <input matInput formControlName="phoneNumber" placeholder="Enter 10-digit phone number">
+      <mat-error *ngIf="editForm.get('phoneNumber')?.hasError('required')">Phone number is required</mat-error>
+      <mat-error *ngIf="editForm.get('phoneNumber')?.hasError('pattern')">Enter a valid 10-digit number</mat-error>
+    </mat-form-field>
+
+    <div class="row">
+      <mat-form-field appearance="outline">
+        <mat-label>Role</mat-label>
+        <mat-select formControlName="role">
+          <mat-option *ngFor="let role of roles" [value]="role">{{role}}</mat-option>
+        </mat-select>
+        <mat-error *ngIf="editForm.get('role')?.hasError('required')">Role is required</mat-error>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Department</mat-label>
+        <mat-select formControlName="department">
+          <mat-option *ngFor="let dept of departments" [value]="dept">{{dept}}</mat-option>
+        </mat-select>
+        <mat-error *ngIf="editForm.get('department')?.hasError('required')">Department is required</mat-error>
+      </mat-form-field>
+    </div>
+
+    <mat-form-field appearance="outline">
+      <mat-label>Status</mat-label>
+      <mat-select formControlName="status">
+        <mat-option value="Active">Active</mat-option>
+        <mat-option value="Inactive">Inactive</mat-option>
+      </mat-select>
+      <mat-error *ngIf="editForm.get('status')?.hasError('required')">Status is required</mat-error>
+    </mat-form-field>
+  </form>
+</mat-dialog-content>
+<mat-dialog-actions align="end">
+  <button mat-button (click)="onCancel()">Cancel</button>
+  <button mat-raised-button color="primary" (click)="onSave()" [disabled]="editForm.invalid">Save Changes</button>
+</mat-dialog-actions>

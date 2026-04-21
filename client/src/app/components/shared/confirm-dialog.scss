@@ -1,0 +1,31 @@
+    .confirm-container {
+      padding: 1rem;
+      text-align: center;
+    }
+    .icon-wrapper {
+      margin-bottom: 1rem;
+      mat-icon {
+        font-size: 3rem;
+        width: 3rem;
+        height: 3rem;
+      }
+    }
+    h2 {
+      margin: 0;
+      font-weight: 700;
+      color: #1e293b;
+    }
+    p {
+      color: #64748b;
+      margin-top: 0.5rem;
+    }
+    mat-dialog-actions {
+      margin-top: 1.5rem;
+      gap: 12px;
+      
+      button {
+        padding: 0.5rem 2rem;
+        border-radius: 8px;
+        font-weight: 600;
+      }
+    }
