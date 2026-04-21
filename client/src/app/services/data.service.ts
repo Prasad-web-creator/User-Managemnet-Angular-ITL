@@ -4,6 +4,7 @@ import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { tap, catchError, finalize } from 'rxjs/operators';
 import { AbstractControl, ValidationErrors } from '@angular/forms';
 import { MatSnackBar } from '@angular/material/snack-bar';
+import { environment } from '../../environments/environment';
 
 // Interfaces
 export interface Stat {
@@ -38,7 +39,7 @@ export interface User {
 
 export class DataService {
   // API Configuration
-  public readonly api = 'http://localhost:5000/api';
+  public readonly api = environment.apiUrl;
   private apiEndpoints = {
     users: '/users',
     stats: '/stats'
@@ -257,5 +258,3 @@ export class DataService {
     return password === confirm ? null : { mismatch: true };
   }
 }
-
-
