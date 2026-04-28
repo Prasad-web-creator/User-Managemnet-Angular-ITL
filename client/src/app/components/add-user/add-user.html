@@ -1,8 +1,11 @@
 <!-- src/app/add-user/add-user.component.html -->
 <div class="add-user-container">
   <div class="form-header">
-    <h1>Create New User</h1>
-    <p>Fill in the details below to add a team member</p>
+    <div class="header-text">
+      <h1>{{ isEditMode ? (isOwnProfile ? 'Edit Your Profile' : 'Edit User') : 'Create New User' }}</h1>
+      <p>{{ isEditMode ? (isOwnProfile ? 'Update your personal details below' : 'Update the details below for this team member') : 'Fill in the details below to add a team member' }}</p>
+    </div>
+    <button *ngIf="isEditMode" type="button" class="close-icon" (click)="cancelEdit()" title="Cancel">✖</button>
   </div>
 
   <form [formGroup]="userForm" (ngSubmit)="onSubmit()" class="user-form">
@@ -57,7 +60,7 @@
       <h2>Authentication</h2>
       <div class="form-row">
         <div class="form-group">
-          <label>Password *</label>
+          <label>Password <span *ngIf="!isEditMode">*</span></label>
           <input type="password" formControlName="password" placeholder="••••••" class="form-control">
           <div class="error-message" *ngIf="f['password'].invalid && f['password'].touched">
             <span *ngIf="f['password'].errors?.['required']">Password required</span>
@@ -66,7 +69,7 @@
         </div>
 
         <div class="form-group">
-          <label>Confirm Password *</label>
+          <label>Confirm Password <span *ngIf="!isEditMode">*</span></label>
           <input type="password" formControlName="confirmPassword" placeholder="••••••" class="form-control">
           <div class="error-message" *ngIf="userForm.errors?.['mismatch'] && f['confirmPassword'].touched">
             Passwords do not match
@@ -117,6 +120,7 @@
           <div class="error-message" *ngIf="f['joiningDate'].invalid && f['joiningDate'].touched">
             <span *ngIf="f['joiningDate'].errors?.['required']">Joining date required</span>
             <span *ngIf="f['joiningDate'].errors?.['futureDate']">Date cannot be in future</span>
+            <span *ngIf="f['joiningDate'].errors?.['tooOld']">Date cannot be more than 200 years ago</span>
           </div>
         </div>
       </div>
@@ -152,8 +156,9 @@
 
     <!-- Submit -->
     <div class="form-actions">
-      <button type="button" class="btn-secondary" (click)="userForm.reset({ status: 'Active' }); imagePreview=null; selectedImageFile=null">Reset</button>
-      <button type="submit" class="btn-primary" [disabled]="userForm.invalid">Create User</button>
+      <button type="button" class="btn-secondary" *ngIf="!isEditMode" (click)="userForm.reset({ status: 'Active' }); imagePreview=null; selectedImageFile=null">Reset</button>
+      <button type="button" class="btn-secondary" *ngIf="isEditMode" (click)="cancelEdit()">Cancel</button>
+      <button type="submit" class="btn-primary" [disabled]="userForm.invalid">{{ isEditMode ? (isOwnProfile ? 'Update Your Profile' : 'Update User') : 'Create User' }}</button>
     </div>
   </form>
 </div>

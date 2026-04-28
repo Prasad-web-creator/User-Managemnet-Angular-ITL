@@ -22,6 +22,7 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
         // Clear local storage and redirect to login
         localStorage.removeItem('user');
         localStorage.removeItem('token');
+        localStorage.removeItem('permissions');
         router.navigate(['/login']);
       }
       return throwError(() => error);

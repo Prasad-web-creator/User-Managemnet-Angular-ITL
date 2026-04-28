@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators, AbstractControl, ValidationErrors } from '@angular/forms';
 import { Router, RouterModule } from '@angular/router';
@@ -26,31 +26,35 @@ function passwordMatchValidator(group: AbstractControl): ValidationErrors | null
   styleUrl: './forgot-password.scss'
 })
 
-export class ForgotPasswordComponent {
+export class ForgotPasswordComponent implements OnInit {
   faLock = faLock;
   faEye = faEye;
   faEyeSlash = faEyeSlash;
   faEnvelope = faEnvelope;
-  resetForm: FormGroup;
-
+  resetForm!: FormGroup;
 
   showNewPassword = false;
   showConfirmPassword = false;
   isLoading = false;
-
 
   constructor(
     private fb: FormBuilder,
     private http: HttpClient,
     private dataService: DataService,
     private snackBar: MatSnackBar,
-    private router: Router
-  ) {
+    private router: Router,
+    private cdr: ChangeDetectorRef
+  ) {}
+
+  ngOnInit(): void {
     this.resetForm = this.fb.group({
       email: ['', [Validators.required, Validators.email]],
       newPassword: ['', [Validators.required, Validators.minLength(6)]],
       confirmPassword: ['', Validators.required]
     }, { validators: passwordMatchValidator });
+    
+    // Defer any immediate state changes to the next tick
+    this.cdr.detectChanges();
   }
 
   onSubmit() {

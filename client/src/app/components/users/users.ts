@@ -1,4 +1,4 @@
-import { Component, OnInit, ChangeDetectorRef, ViewChild } from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef, ViewChild, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 
 import { MatTableModule, MatTableDataSource } from '@angular/material/table';
@@ -16,7 +16,7 @@ import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatSelectModule } from '@angular/material/select';
 import { SelectionModel } from '@angular/cdk/collections';
 import { DataService, User } from '../../services/data.service';
-import { EditUserDialogComponent } from './edit-user-dialog/edit-user-dialog';
+import { Router } from '@angular/router';
 
 import { ConfirmDialogComponent } from '../shared/confirm-dialog';
 
@@ -43,11 +43,26 @@ import { ConfirmDialogComponent } from '../shared/confirm-dialog';
   styleUrl: './users.scss',
 })
 export class UsersComponent implements OnInit {
+  public dataService = inject(DataService);
+  private cdr = inject(ChangeDetectorRef);
+  private dialog = inject(MatDialog);
+  private snackBar = inject(MatSnackBar);
+  private router = inject(Router);
+
   dataSource = new MatTableDataSource<User>([]);
   displayedColumns: string[] = [];
   selection = new SelectionModel<User>(true, []);
   currentSort = '';
   currentUser: any;
+  permissions$ = this.dataService.userPermissions$;
+  
+  roles: string[] = [];
+  departments: string[] = [];
+  filterValues = {
+    search: '',
+    role: '',
+    department: ''
+  };
 
   @ViewChild(MatPaginator) set matPaginator(mp: MatPaginator) {
     this.dataSource.paginator = mp;
@@ -61,34 +76,54 @@ export class UsersComponent implements OnInit {
   // To keep compatibility with existing methods
   sort!: MatSort;
 
-  constructor(
-    public dataService: DataService,
-    private cdr: ChangeDetectorRef,
-    private dialog: MatDialog,
-    private snackBar: MatSnackBar,
-  ) {}
-
+  constructor() {}
+  
   ngOnInit(): void {
-    const userData = localStorage.getItem('user');
-    if (userData) {
-      this.currentUser = JSON.parse(userData);
-    }
+    const userJson = localStorage.getItem('user');
+    this.currentUser = userJson ? JSON.parse(userJson) : null;
 
-    this.displayedColumns = this.dataService.TABLE_COLUMNS.filter((col) => {
-      if (!this.isAdmin() && (col === 'select' || col === 'actions')) {
-        return false;
+    this.dataService.getRoles().subscribe(roles => {
+      this.roles = roles.map(r => r.name);
+    });
+    this.departments = this.dataService.getDepartments();
+
+    this.dataSource.filterPredicate = (data: User, filter: string) => {
+      try {
+        const searchTerms = JSON.parse(filter);
+        const matchSearch = !searchTerms.search || 
+          Object.values(data).some(val => 
+            val && val.toString().toLowerCase().includes(searchTerms.search)
+          );
+        const matchRole = !searchTerms.role || data.role === searchTerms.role;
+        const matchDepartment = !searchTerms.department || data.department === searchTerms.department;
+        return matchSearch && matchRole && matchDepartment;
+      } catch (e) {
+        return Object.values(data).some(val => 
+          val && val.toString().toLowerCase().includes(filter)
+        );
       }
-      return true;
+    };
+
+    this.dataService.userPermissions$.subscribe(perms => {
+      if (perms) {
+        this.displayedColumns = this.dataService.TABLE_COLUMNS.filter((col) => {
+          if (col === 'select' && !perms.deleteUsers) return false;
+          if (col === 'actions' && !perms.editUsers && !perms.deleteUsers) return false;
+          return true;
+        });
+      }
     });
 
     this.dataService.users$.subscribe({
       next: (users) => {
         this.dataSource.data = users;
-        this.cdr.detectChanges();
       },
     });
 
-    this.dataService.refreshUsers();
+    // Use a small delay to avoid ExpressionChangedAfterItHasBeenCheckedError
+    setTimeout(() => {
+      this.dataService.refreshUsers();
+    });
   }
 
   isAdmin(): boolean {
@@ -97,11 +132,24 @@ export class UsersComponent implements OnInit {
 
   applyFilter(event: Event) {
     const filterValue = (event.target as HTMLInputElement).value;
-    this.dataSource.filter = filterValue.trim().toLowerCase();
+    this.filterValues.search = filterValue.trim().toLowerCase();
+    this.dataSource.filter = JSON.stringify(this.filterValues);
 
     if (this.dataSource.paginator) {
       this.dataSource.paginator.firstPage();
     }
+  }
+
+  onRoleFilterChange(role: string) {
+    this.filterValues.role = role;
+    this.dataSource.filter = JSON.stringify(this.filterValues);
+    if (this.dataSource.paginator) this.dataSource.paginator.firstPage();
+  }
+
+  onDepartmentFilterChange(dept: string) {
+    this.filterValues.department = dept;
+    this.dataSource.filter = JSON.stringify(this.filterValues);
+    if (this.dataSource.paginator) this.dataSource.paginator.firstPage();
   }
 
   onSortChange(column: string) {
@@ -144,47 +192,27 @@ export class UsersComponent implements OnInit {
   }
 
   editUser(user: User): void {
-    if (!this.isAdmin()) return;
-    const dialogRef = this.dialog.open(EditUserDialogComponent, {
-      width: '500px',
-      data: { ...user },
-    });
-
-    dialogRef.afterClosed().subscribe((result) => {
-      if (result && user._id) {
-        this.dataService.updateUser(user._id, result).subscribe({
-          next: (res) => {
-            if (res.success) {
-              this.snackBar.open('User updated successfully!', 'Close', {
-                duration: 3000,
-                horizontalPosition: 'right',
-                verticalPosition: 'top',
-                panelClass: ['success-snackbar'],
-              });
-            }
-          },
-          error: (err) => {
-            console.error('Error updating user:', err);
-            this.snackBar.open('Failed to update user.', 'Close', {
-              duration: 3000,
-              horizontalPosition: 'right',
-              verticalPosition: 'top',
-              panelClass: ['error-snackbar'],
-            });
-          },
-        });
-      }
-    });
+    const perms = this.dataService.userPermissionsSubjectValue;
+    if (!perms?.editUsers) {
+        this.dataService.showNotification('You do not have permission to edit users.', 'error');
+        return;
+    }
+    this.router.navigate(['/edit-user', user._id]);
   }
 
   deleteUser(id: string): void {
-    if (!this.isAdmin()) return;
+    const perms = this.dataService.userPermissionsSubjectValue;
+    if (!perms?.deleteUsers) {
+        this.dataService.showNotification('You do not have permission to delete users.', 'error');
+        return;
+    }
     const dialogRef = this.dialog.open(ConfirmDialogComponent, {
       width: '400px',
       data: {
         title: 'Delete User',
         message: 'Are you sure you want to delete this user? This action cannot be undone.',
       },
+      backdropClass: 'blur-backdrop'
     });
 
     dialogRef.afterClosed().subscribe((confirmed) => {
@@ -214,7 +242,11 @@ export class UsersComponent implements OnInit {
   }
 
   deleteSelectedUsers(): void {
-    if (!this.isAdmin()) return;
+    const perms = this.dataService.userPermissionsSubjectValue;
+    if (!perms?.deleteUsers) {
+        this.dataService.showNotification('You do not have permission to delete users.', 'error');
+        return;
+    }
     const selectedIds = this.selection.selected
       .map((u) => u._id)
       .filter((id) => id !== undefined) as string[];
@@ -227,6 +259,7 @@ export class UsersComponent implements OnInit {
         title: 'Delete Multiple Users',
         message: `Are you sure you want to delete ${selectedIds.length} selected users? This action cannot be undone.`,
       },
+      backdropClass: 'blur-backdrop'
     });
 
     dialogRef.afterClosed().subscribe((confirmed) => {

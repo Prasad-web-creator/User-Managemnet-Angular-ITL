@@ -77,3 +77,10 @@ body {
 .mat-mdc-form-field {
   width: 100%;
 }
+
+/* Glassmorphism Dialog Backdrop */
+.blur-backdrop {
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  background-color: rgba(0, 0, 0, 0.45);
+}

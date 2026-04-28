@@ -1,0 +1,69 @@
+<div class="profile-page-container">
+  <div class="header-actions">
+    <button class="btn-back" (click)="goBack()">
+      <fa-icon [icon]="faArrowLeft"></fa-icon> Back
+    </button>
+  </div>
+
+  <div class="profile-card" *ngIf="!isLoading && user">
+    <div class="profile-banner">
+      <div class="avatar-wrapper">
+        <img *ngIf="user.profileImage" [src]="user.profileImage" alt="Avatar">
+        <div *ngIf="!user.profileImage" class="avatar-placeholder">{{ user.fullName?.charAt(0) }}</div>
+        <div class="status-indicator" [ngClass]="user.status?.toLowerCase() === 'inactive' ? 'inactive' : 'active'" [title]="user.status || 'Active'"></div>
+      </div>
+    </div>
+    
+    <div class="profile-content">
+      <div class="profile-header">
+        <h1>{{ user.fullName }}</h1>
+        <span class="role-badge">{{ user.role }}</span>
+      </div>
+
+      <div class="details-grid">
+        <div class="detail-item">
+          <div class="icon-box"><fa-icon [icon]="faUserCircle"></fa-icon></div>
+          <div class="detail-text">
+            <span class="label">Username</span>
+            <span class="value">{{ user.username }}</span>
+          </div>
+        </div>
+        
+        <div class="detail-item">
+          <div class="icon-box"><fa-icon [icon]="faEnvelope"></fa-icon></div>
+          <div class="detail-text">
+            <span class="label">Email</span>
+            <span class="value">{{ user.email }}</span>
+          </div>
+        </div>
+        
+        <div class="detail-item">
+          <div class="icon-box"><fa-icon [icon]="faBuilding"></fa-icon></div>
+          <div class="detail-text">
+            <span class="label">Department</span>
+            <span class="value">{{ user.department }}</span>
+          </div>
+        </div>
+
+        <div class="detail-item">
+          <div class="icon-box"><fa-icon [icon]="faPhone"></fa-icon></div>
+          <div class="detail-text">
+            <span class="label">Phone Number</span>
+            <span class="value">{{ user.phoneNumber || 'N/A' }}</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="profile-actions">
+        <button class="btn-edit" (click)="editProfile()">
+          <fa-icon [icon]="faEdit"></fa-icon> Edit Profile
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div class="loading-state" *ngIf="isLoading">
+    <div class="spinner"></div>
+    <p>Loading profile...</p>
+  </div>
+</div>

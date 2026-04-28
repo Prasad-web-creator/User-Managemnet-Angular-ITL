@@ -53,3 +53,23 @@ exports.authorize = (...roles) => {
     next();
   };
 };
+
+// Check specific screen permission
+exports.checkPermission = (permission) => {
+  return async (req, res, next) => {
+    try {
+      const Role = require('../models/Role');
+      const roleDoc = await Role.findOne({ name: req.user.role });
+
+      if (!roleDoc || !roleDoc.permissions || !roleDoc.permissions[permission]) {
+        return res.status(403).json({
+          success: false,
+          message: `Permission denied: ${permission} access required.`
+        });
+      }
+      next();
+    } catch (error) {
+      res.status(500).json({ success: false, message: 'Server Error' });
+    }
+  };
+};

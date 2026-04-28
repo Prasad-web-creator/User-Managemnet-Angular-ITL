@@ -1,6 +1,6 @@
 const express = require('express');
 const { getUsers, createUser, getUser, loginUser, updateUser, deleteUser, deleteMultipleUsers, resetPassword } = require('../controllers/userController');
-const { protect, authorize } = require('../middleware/authMiddleware');
+const { protect, authorize, checkPermission } = require('../middleware/authMiddleware');
 
 
 const router = express.Router();
@@ -13,15 +13,15 @@ router.post('/reset-password', resetPassword);
 router.use(protect);
 
 router.route('/')
-  .get(authorize('Admin', 'HR'), getUsers)
-  .post(authorize('Admin'), createUser);
+  .get(checkPermission('viewUsers'), getUsers)
+  .post(checkPermission('addUser'), createUser);
 
-router.delete('/delete-multiple', authorize('Admin'), deleteMultipleUsers);
+router.delete('/delete-multiple', checkPermission('deleteUsers'), deleteMultipleUsers);
 
 router.route('/:id')
-  .get(getUser)
-  .put(authorize('Admin'), updateUser)
-  .delete(authorize('Admin'), deleteUser);
+  .get(checkPermission('viewUsers'), getUser)
+  .put(checkPermission('editUsers'), updateUser)
+  .delete(checkPermission('deleteUsers'), deleteUser);
 
 
 module.exports = router;

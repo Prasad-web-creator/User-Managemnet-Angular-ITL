@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterModule, Router } from '@angular/router';
@@ -37,7 +37,8 @@ export class LoginComponent {
     private router: Router,
     private http: HttpClient,
     private dataService: DataService,
-    private snackBar: MatSnackBar
+    private snackBar: MatSnackBar,
+    private cdr: ChangeDetectorRef
   ) { }
 
   togglePassword() {
@@ -61,6 +62,10 @@ export class LoginComponent {
             // Store user info and token
             localStorage.setItem('user', JSON.stringify(response.data));
             localStorage.setItem('token', response.token);
+            if (response.data.permissions) {
+              localStorage.setItem('permissions', JSON.stringify(response.data.permissions));
+              this.dataService.setUserPermissions(response.data.permissions);
+            }
 
             this.snackBar.open(response?.message || 'Login successful', 'Close', { 
               duration: 3000,
@@ -75,6 +80,7 @@ export class LoginComponent {
         error: (err) => {
           this.isLoading = false;
           this.errorMessage = err.error?.message || 'Login failed. Please try again.';
+          this.cdr.detectChanges();
           console.error('Login error:', err);
           this.snackBar.open(this.errorMessage, 'Close', { 
             duration: 3000,

@@ -5,14 +5,15 @@ import { provideHttpClient, withInterceptors } from '@angular/common/http';
 import { ReactiveFormsModule } from '@angular/forms';
 
 import { routes } from './app.routes';
-import { authInterceptor } from '../auth.interceptor';
+import { authInterceptor } from '../interceptors/auth.interceptor';
+import { errorInterceptor } from '../interceptors/error.interceptor';
 
 export const appConfig: ApplicationConfig = {
   providers: [
     provideRouter(routes),
     provideAnimations(),
     importProvidersFrom(ReactiveFormsModule),
-    provideHttpClient(withInterceptors([authInterceptor]))
+    provideHttpClient(withInterceptors([authInterceptor, errorInterceptor]))
   ]
 };
 

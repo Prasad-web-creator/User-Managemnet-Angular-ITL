@@ -54,8 +54,11 @@ export class DashboardComponent implements OnInit, AfterViewInit {
     this.stats$ = this.dataService.dashboardStats$;
     this.users$ = this.dataService.users$;
 
-    // Refresh users on load
-    this.dataService.refreshUsers();
+    // Refresh data on load - wrapped in setTimeout to avoid NG0100
+    setTimeout(() => {
+      this.dataService.refreshUsers();
+      this.dataService.refreshRoles();
+    });
   }
 
   get isAdmin(): boolean {

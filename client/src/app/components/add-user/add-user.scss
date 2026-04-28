@@ -8,18 +8,42 @@
 
   .form-header {
     margin-bottom: 2rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
 
-    h1 {
-      font-size: 1.875rem;
-      font-weight: 700;
-      color: var(--dark);
-      margin-bottom: 0.5rem;
+    .header-text {
+      h1 {
+        font-size: 1.875rem;
+        font-weight: 700;
+        color: var(--dark);
+        margin-bottom: 0.5rem;
+      }
+
+      p {
+        color: var(--gray-500);
+        font-size: 0.95rem;
+        font-weight: 500;
+      }
     }
 
-    p {
+    .close-icon {
+      background: none;
+      border: none;
+      font-size: 1.5rem;
       color: var(--gray-500);
-      font-size: 0.95rem;
-      font-weight: 500;
+      cursor: pointer;
+      padding: 0.5rem;
+      border-radius: 50%;
+      transition: all 0.2s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+
+      &:hover {
+        background: var(--gray-200);
+        color: var(--danger);
+      }
     }
   }
 

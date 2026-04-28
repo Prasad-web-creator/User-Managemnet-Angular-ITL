@@ -76,26 +76,24 @@
 
       .search-sort-group {
         display: flex;
+        flex-wrap: wrap;
         gap: 1rem;
         flex: 1;
-        max-width: 600px;
         width: 100%;
         
         @media (max-width: 768px) {
           flex-direction: column;
           gap: 0.5rem;
-          max-width: none;
         }
         
         .filter-field {
           flex: 2;
-          width: 100%;
+          min-width: 200px;
         }
         
         .sort-field {
           flex: 1;
-          min-width: 180px;
-          width: 100%;
+          min-width: 160px;
         }
 
         @media (max-width: 768px) {

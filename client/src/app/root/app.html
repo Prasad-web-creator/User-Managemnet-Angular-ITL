@@ -20,25 +20,33 @@
       </button>
     </div>
 
-    <nav class="nav-menu">
-      <a routerLink="/dashboard" routerLinkActive="active" class="nav-item" (click)="isMobileMenuOpen = false">
+    <nav class="nav-menu" *ngIf="permissions$ | async as perm">
+      <a routerLink="/dashboard" routerLinkActive="active" class="nav-item" (click)="isMobileMenuOpen = false" *ngIf="perm.dashboard">
         <fa-icon [icon]="dashboardIcon" class="icon"></fa-icon>
         <span>Dashboard</span>
       </a>
-      <a routerLink="/users" routerLinkActive="active" class="nav-item" (click)="isMobileMenuOpen = false">
+      <a routerLink="/users" routerLinkActive="active" class="nav-item" (click)="isMobileMenuOpen = false" *ngIf="perm.viewUsers">
         <fa-icon [icon]="usersIcon" class="icon"></fa-icon>
         <span>Users</span>
       </a>
-      <a routerLink="/add-user" routerLinkActive="active" class="nav-item" (click)="isMobileMenuOpen = false" *ngIf="isAdmin">
+      <a routerLink="/add-user" routerLinkActive="active" class="nav-item" (click)="isMobileMenuOpen = false" *ngIf="perm.addUser">
         <fa-icon [icon]="addUserIcon" class="icon"></fa-icon>
         <span>Add User</span>
       </a>
-
+      <a routerLink="/roles" routerLinkActive="active" class="nav-item" (click)="isMobileMenuOpen = false" *ngIf="perm.roles">
+        <fa-icon [icon]="rolesIcon" class="icon"></fa-icon>
+        <span>Roles</span>
+      </a>
+      <a routerLink="/activity-log" routerLinkActive="active" class="nav-item" (click)="isMobileMenuOpen = false" *ngIf="perm.viewActivityLog">
+        <fa-icon [icon]="activityLogIcon" class="icon"></fa-icon>
+        <span>Activity Log</span>
+      </a>
     </nav>
     
     <div class="sidebar-footer">
-      <div class="user-profile" *ngIf="currentUser">
-        <div class="user-avatar">{{ currentUser.fullName?.charAt(0) }}</div>
+      <div class="user-profile" *ngIf="currentUser" (click)="viewProfile()" title="View Profile">
+        <div class="user-avatar" *ngIf="!currentUser.profileImage">{{ currentUser.fullName?.charAt(0) }}</div>
+        <img class="user-avatar" *ngIf="currentUser.profileImage" [src]="currentUser.profileImage" alt="Avatar" style="object-fit: cover;">
         <div class="user-info">
           <span class="username">{{ currentUser.fullName }}</span>
           <span class="user-role">{{ currentUser.role }} • {{ currentUser.department || 'General' }}</span>
@@ -56,6 +64,15 @@
   <div class="overlay" *ngIf="isMobileMenuOpen" (click)="toggleMobileMenu()"></div>
 
   <main class="main-content">
+    <div class="global-error-banner" *ngIf="dataService.error$ | async as error">
+      <div class="error-content">
+        <fa-icon [icon]="errorIcon" class="error-icon"></fa-icon>
+        <span class="error-message">{{ error }}</span>
+      </div>
+      <button class="clear-error-btn" (click)="dataService.clearError()">
+        <fa-icon [icon]="closeIcon"></fa-icon>
+      </button>
+    </div>
     <router-outlet></router-outlet>
   </main>
 </div>
