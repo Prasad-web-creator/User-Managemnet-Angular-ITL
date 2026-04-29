@@ -1,5 +1,7 @@
-import { Component, OnInit, ChangeDetectorRef, ViewChild, inject } from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef, ViewChild, inject, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { Subject, takeUntil } from 'rxjs';
+import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
 
 import { MatTableModule, MatTableDataSource } from '@angular/material/table';
 import { MatPaginatorModule, MatPaginator } from '@angular/material/paginator';
@@ -42,12 +44,15 @@ import { ConfirmDialogComponent } from '../shared/confirm-dialog';
   templateUrl: './users.html',
   styleUrl: './users.scss',
 })
-export class UsersComponent implements OnInit {
+export class UsersComponent implements OnInit, OnDestroy {
   public dataService = inject(DataService);
   private cdr = inject(ChangeDetectorRef);
   private dialog = inject(MatDialog);
   private snackBar = inject(MatSnackBar);
   private router = inject(Router);
+
+  private destroy$ = new Subject<void>();
+  private searchSubject = new Subject<string>();
 
   dataSource = new MatTableDataSource<User>([]);
   displayedColumns: string[] = [];
@@ -55,13 +60,14 @@ export class UsersComponent implements OnInit {
   currentSort = '';
   currentUser: any;
   permissions$ = this.dataService.userPermissions$;
-  
+
   roles: string[] = [];
   departments: string[] = [];
   filterValues = {
     search: '',
     role: '',
-    department: ''
+    department: '',
+    status: ''
   };
 
   @ViewChild(MatPaginator) set matPaginator(mp: MatPaginator) {
@@ -76,8 +82,8 @@ export class UsersComponent implements OnInit {
   // To keep compatibility with existing methods
   sort!: MatSort;
 
-  constructor() {}
-  
+  constructor() { }
+
   ngOnInit(): void {
     const userJson = localStorage.getItem('user');
     this.currentUser = userJson ? JSON.parse(userJson) : null;
@@ -86,23 +92,6 @@ export class UsersComponent implements OnInit {
       this.roles = roles.map(r => r.name);
     });
     this.departments = this.dataService.getDepartments();
-
-    this.dataSource.filterPredicate = (data: User, filter: string) => {
-      try {
-        const searchTerms = JSON.parse(filter);
-        const matchSearch = !searchTerms.search || 
-          Object.values(data).some(val => 
-            val && val.toString().toLowerCase().includes(searchTerms.search)
-          );
-        const matchRole = !searchTerms.role || data.role === searchTerms.role;
-        const matchDepartment = !searchTerms.department || data.department === searchTerms.department;
-        return matchSearch && matchRole && matchDepartment;
-      } catch (e) {
-        return Object.values(data).some(val => 
-          val && val.toString().toLowerCase().includes(filter)
-        );
-      }
-    };
 
     this.dataService.userPermissions$.subscribe(perms => {
       if (perms) {
@@ -120,10 +109,51 @@ export class UsersComponent implements OnInit {
       },
     });
 
-    // Use a small delay to avoid ExpressionChangedAfterItHasBeenCheckedError
-    setTimeout(() => {
-      this.dataService.refreshUsers();
+    this.dataService.usersPagination$.subscribe(meta => {
+      if (meta && this.dataSource.paginator) {
+        this.dataSource.paginator.length = meta.total;
+        this.dataSource.paginator.pageIndex = meta.page - 1;
+        this.dataSource.paginator.pageSize = meta.limit;
+      }
     });
+
+    // Initial load
+    this.loadUsers();
+
+    // Debounced search logic
+    this.searchSubject.pipe(
+      debounceTime(400),
+      distinctUntilChanged(),
+      takeUntil(this.destroy$)
+    ).subscribe(val => {
+      this.filterValues.search = val;
+      if (this.dataSource.paginator) {
+        this.dataSource.paginator.pageIndex = 0;
+      }
+      this.loadUsers();
+    });
+  }
+
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
+  }
+
+  loadUsers() {
+    const params: any = {
+      page: this.dataSource.paginator ? this.dataSource.paginator.pageIndex + 1 : 1,
+      limit: this.dataSource.paginator ? this.dataSource.paginator.pageSize : 10,
+      search: this.filterValues.search,
+      role: this.filterValues.role,
+      department: this.filterValues.department,
+      status: this.filterValues.status
+    };
+
+    if (this.sort && this.sort.active) {
+      params.sort = `${this.sort.active}:${this.sort.direction || 'asc'}`;
+    }
+
+    this.dataService.refreshUsers(params);
   }
 
   isAdmin(): boolean {
@@ -132,38 +162,37 @@ export class UsersComponent implements OnInit {
 
   applyFilter(event: Event) {
     const filterValue = (event.target as HTMLInputElement).value;
-    this.filterValues.search = filterValue.trim().toLowerCase();
-    this.dataSource.filter = JSON.stringify(this.filterValues);
-
-    if (this.dataSource.paginator) {
-      this.dataSource.paginator.firstPage();
-    }
+    this.searchSubject.next(filterValue.trim().toLowerCase());
   }
 
   onRoleFilterChange(role: string) {
     this.filterValues.role = role;
-    this.dataSource.filter = JSON.stringify(this.filterValues);
-    if (this.dataSource.paginator) this.dataSource.paginator.firstPage();
+    this.loadUsers();
   }
 
   onDepartmentFilterChange(dept: string) {
     this.filterValues.department = dept;
-    this.dataSource.filter = JSON.stringify(this.filterValues);
-    if (this.dataSource.paginator) this.dataSource.paginator.firstPage();
+    this.loadUsers();
   }
 
-  onSortChange(column: string) {
-    if (!this.sort) return;
-    this.currentSort = column;
-    const sortState: Sort = { active: column, direction: 'asc' };
-    this.sort.active = sortState.active;
-    this.sort.direction = sortState.direction;
-    this.sort.sortChange.emit(sortState);
+  onStatusFilterChange(status: string) {
+    this.filterValues.status = status;
+    this.loadUsers();
+  }
 
-    // Explicitly tell the data source to sort
-    if (this.dataSource) {
-      this.dataSource.sort = this.sort;
+  onPageChange(event: any) {
+    this.loadUsers();
+  }
+
+  onSortChange(event: any) {
+    if (typeof event === 'string') {
+      this.currentSort = event;
+      if (this.sort) {
+        this.sort.active = event;
+        this.sort.direction = 'asc';
+      }
     }
+    this.loadUsers();
   }
 
   /** Whether the number of selected elements matches the total number of rows. */
@@ -194,8 +223,8 @@ export class UsersComponent implements OnInit {
   editUser(user: User): void {
     const perms = this.dataService.userPermissionsSubjectValue;
     if (!perms?.editUsers) {
-        this.dataService.showNotification('You do not have permission to edit users.', 'error');
-        return;
+      this.dataService.showNotification('You do not have permission to edit users.', 'error');
+      return;
     }
     this.router.navigate(['/edit-user', user._id]);
   }
@@ -203,8 +232,8 @@ export class UsersComponent implements OnInit {
   deleteUser(id: string): void {
     const perms = this.dataService.userPermissionsSubjectValue;
     if (!perms?.deleteUsers) {
-        this.dataService.showNotification('You do not have permission to delete users.', 'error');
-        return;
+      this.dataService.showNotification('You do not have permission to delete users.', 'error');
+      return;
     }
     const dialogRef = this.dialog.open(ConfirmDialogComponent, {
       width: '400px',
@@ -244,8 +273,8 @@ export class UsersComponent implements OnInit {
   deleteSelectedUsers(): void {
     const perms = this.dataService.userPermissionsSubjectValue;
     if (!perms?.deleteUsers) {
-        this.dataService.showNotification('You do not have permission to delete users.', 'error');
-        return;
+      this.dataService.showNotification('You do not have permission to delete users.', 'error');
+      return;
     }
     const selectedIds = this.selection.selected
       .map((u) => u._id)

@@ -1,0 +1,153 @@
+<div class="projects-container fade-in">
+  <div class="header">
+    <div class="title-section">
+      <h1>My Projects</h1>
+      <p>View and track projects you are currently assigned to.</p>
+    </div>
+  </div>
+
+  <mat-card class="table-card">
+    <div class="loading-shade" *ngIf="loading$ | async">
+      <div class="spinner"></div>
+    </div>
+
+    <div class="table-container">
+      <table mat-table [dataSource]="dataSource" multiTemplateDataRows>
+        
+        <!-- Expand Column -->
+        <ng-container matColumnDef="expand">
+          <th mat-header-cell *matHeaderCellDef aria-label="row actions">&nbsp;</th>
+          <td mat-cell *matCellDef="let team">
+            <button mat-icon-button aria-label="expand row" *ngIf="canExpand(team)"
+                    (click)="(expandedElement = expandedElement === team ? null : team); $event.stopPropagation()">
+              <mat-icon>{{expandedElement === team ? 'keyboard_arrow_up' : 'keyboard_arrow_down'}}</mat-icon>
+            </button>
+          </td>
+        </ng-container>
+        <ng-container matColumnDef="projectName">
+          <th mat-header-cell *matHeaderCellDef>Project Name</th>
+          <td mat-cell *matCellDef="let team">
+            <div class="project-info">
+              <mat-icon class="project-icon">assignment</mat-icon>
+              <span class="project-name">{{ team.projectName || 'Unnamed Project' }}</span>
+            </div>
+          </td>
+        </ng-container>
+
+        <!-- Team Name Column -->
+        <ng-container matColumnDef="teamName">
+          <th mat-header-cell *matHeaderCellDef>Team</th>
+          <td mat-cell *matCellDef="let team">
+            <span class="team-badge">{{ team.name }}</span>
+          </td>
+        </ng-container>
+
+        <!-- Project Manager Column -->
+        <ng-container matColumnDef="projectManager">
+          <th mat-header-cell *matHeaderCellDef>Project Manager</th>
+          <td mat-cell *matCellDef="let team">{{ getUserName(team.projectManager) }}</td>
+        </ng-container>
+
+        <!-- Leader Column -->
+        <ng-container matColumnDef="leader">
+          <th mat-header-cell *matHeaderCellDef>Team Leader</th>
+          <td mat-cell *matCellDef="let team">{{ getUserName(team.leader) }}</td>
+        </ng-container>
+
+        <!-- Members Count Column -->
+        <ng-container matColumnDef="membersCount">
+          <th mat-header-cell *matHeaderCellDef>Members</th>
+          <td mat-cell *matCellDef="let team">
+            <div class="members-count">
+              <mat-icon>people</mat-icon>
+              <span>{{ team.members?.length || 0 }}</span>
+            </div>
+          </td>
+        </ng-container>
+
+        <!-- Status Column -->
+        <ng-container matColumnDef="status">
+          <th mat-header-cell *matHeaderCellDef>Your Role</th>
+          <td mat-cell *matCellDef="let team">
+            <mat-chip-set>
+              <mat-chip class="role-chip pm" *ngIf="isPM(team)">Project Manager</mat-chip>
+              <mat-chip class="role-chip leader" *ngIf="isLeader(team)">Team Leader</mat-chip>
+              <mat-chip class="role-chip member" *ngIf="isMember(team)">Team Member</mat-chip>
+            </mat-chip-set>
+          </td>
+        </ng-container>
+
+        <!-- Expanded Detail Column -->
+        <ng-container matColumnDef="expandedDetail">
+          <td mat-cell *matCellDef="let team" [attr.colspan]="displayedColumns.length">
+            <div class="element-detail"
+                 [@detailExpand]="team === expandedElement ? 'expanded' : 'collapsed'">
+              
+              <!-- Content for Project Manager (All Tasks) -->
+              <div class="detail-content" *ngIf="isPM(team)">
+                <div class="detail-header">
+                  <mat-icon>assignment_turned_in</mat-icon>
+                  <h4>Team Assignment Overview</h4>
+                </div>
+                <div class="tasks-grid">
+                  <div class="task-card" *ngFor="let task of team.tasks">
+                    <div class="user-info">
+                      <mat-icon>person</mat-icon>
+                      <span class="name">{{ getUserName(task.user) }}</span>
+                      <span class="role-tag">{{ isUserMatch(team.leader, task.user) ? 'Leader' : 'Member' }}</span>
+                    </div>
+                    <div class="task-value">{{ task.taskName || 'No specific task' }}</div>
+                  </div>
+                  <div class="no-tasks" *ngIf="!team.tasks || team.tasks.length === 0">
+                    <p>No tasks have been assigned to this team yet.</p>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Content for Team Leaders and Members (Only Own Task) -->
+              <div class="detail-content" *ngIf="!isPM(team) && (isLeader(team) || isMember(team))">
+                <div class="detail-header">
+                  <mat-icon>person_pin</mat-icon>
+                  <h4>My Project Assignment</h4>
+                </div>
+                <div class="own-task-card">
+                  <div class="task-label">Your Current Assignment:</div>
+                  <div class="task-name">{{ getMyTask(team) }}</div>
+                  <div class="project-summary">
+                    <div class="summary-item">
+                      <span class="label">Project Manager:</span>
+                      <span class="value">{{ getUserName(team.projectManager) }}</span>
+                    </div>
+                    <div class="summary-item">
+                      <span class="label">Team:</span>
+                      <span class="value">{{ team.name }}</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+            </div>
+          </td>
+        </ng-container>
+
+        <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+        <tr mat-row *matRowDef="let row; columns: displayedColumns;"
+            class="project-row"
+            [class.expanded-row]="expandedElement === row"
+            (click)="canExpand(row) ? (expandedElement = expandedElement === row ? null : row) : null">
+        </tr>
+        <tr mat-row *matRowDef="let row; columns: ['expandedDetail']" class="detail-row"></tr>
+        
+        <tr class="mat-row" *matNoDataRow>
+          <td class="mat-cell" colspan="6" style="text-align: center; padding: 40px;">
+            <div class="no-data">
+              <mat-icon>folder_off</mat-icon>
+              <p>You are not assigned to any projects yet.</p>
+            </div>
+          </td>
+        </tr>
+      </table>
+      <mat-paginator [pageSizeOptions]="[10, 25, 50]" aria-label="Select page of projects" (page)="onPageChange($event)"></mat-paginator>
+    </div>
+  </mat-card>
+</div>

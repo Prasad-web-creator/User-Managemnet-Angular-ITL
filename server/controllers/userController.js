@@ -2,13 +2,92 @@ const User = require('../models/User');
 const Role = require('../models/Role');
 const { logActivity } = require('./activityController');
 
-// @desc    Get all users
+// @desc    Get all users with pagination, filtering, and sorting
 // @route   GET /api/users
 // @access  Public
 exports.getUsers = async (req, res) => {
   try {
-    const users = await User.find().sort({ createdAt: -1 });
-    res.status(200).json({ success: true, data: users });
+    const { 
+      page = 1, 
+      limit = 10, 
+      sort = 'createdAt:desc', 
+      search = '', 
+      role = '', 
+      department = '', 
+      status = '' 
+    } = req.query;
+
+    const query = {};
+
+    // 1. Filtering
+    if (role) query.role = role;
+    if (department) query.department = department;
+    if (status) query.status = status;
+
+    // 2. Search (multi-field)
+    if (search) {
+      query.$or = [
+        { fullName: { $regex: search, $options: 'i' } },
+        { email: { $regex: search, $options: 'i' } },
+        { username: { $regex: search, $options: 'i' } }
+      ];
+    }
+
+    // 3. Sorting
+    let sortOptions = {};
+    if (sort) {
+      const [field, order] = sort.split(':');
+      sortOptions[field] = order === 'desc' ? -1 : 1;
+    }
+
+    // 4. Pagination
+    const pageNum = parseInt(page);
+    const limitNum = parseInt(limit);
+    const skip = (pageNum - 1) * limitNum;
+
+    const total = await User.countDocuments(query);
+    const users = await User.find(query)
+      .sort(sortOptions)
+      .skip(skip)
+      .limit(limitNum);
+
+    res.status(200).json({ 
+      success: true, 
+      data: users,
+      pagination: {
+        total,
+        page: pageNum,
+        limit: limitNum,
+        pages: Math.ceil(total / limitNum)
+      }
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, message: 'Server Error', error: error.message });
+  }
+};
+
+exports.getUserStats = async (req, res) => {
+  try {
+    const roleStats = await User.aggregate([
+      { $group: { _id: '$role', count: { $sum: 1 } } }
+    ]);
+
+    const deptStats = await User.aggregate([
+      { $group: { _id: '$department', count: { $sum: 1 } } }
+    ]);
+
+    const totalUsers = await User.countDocuments();
+    const activeUsers = await User.countDocuments({ status: 'Active' });
+
+    res.status(200).json({
+      success: true,
+      data: {
+        roles: roleStats.reduce((acc, curr) => ({ ...acc, [curr._id || 'Unassigned']: curr.count }), {}),
+        departments: deptStats.reduce((acc, curr) => ({ ...acc, [curr._id || 'Unassigned']: curr.count }), {}),
+        totalUsers,
+        activeUsers
+      }
+    });
   } catch (error) {
     res.status(500).json({ success: false, message: 'Server Error', error: error.message });
   }

@@ -1,0 +1,45 @@
+<div class="dialog-container">
+  <div class="dialog-header">
+    <h2 mat-dialog-title>Assign Tasks - {{ team.name }}</h2>
+    <button mat-icon-button (click)="onCancel()" class="close-btn">
+      <mat-icon>close</mat-icon>
+    </button>
+  </div>
+
+  <mat-dialog-content>
+    <div class="task-instructions">
+      <mat-icon>info</mat-icon>
+      <span>Manually type and assign a specific task to each team member and the team leader.</span>
+    </div>
+
+    <form [formGroup]="taskForm">
+      <div formArrayName="tasks" class="tasks-list">
+        <div class="task-item" *ngFor="let control of tasksControls; let i = index" [formGroupName]="i">
+          
+          <div class="user-info">
+            <div class="user-avatar">{{ teamMembers[i].fullName.charAt(0) }}</div>
+            <div class="user-details">
+              <span class="user-name">{{ teamMembers[i].fullName }}</span>
+              <span class="user-role-badge" [ngClass]="{'leader-badge': isLeader(teamMembers[i])}">
+                {{ isLeader(teamMembers[i]) ? 'Team Leader' : 'Team Member' }}
+              </span>
+            </div>
+          </div>
+
+          <mat-form-field appearance="outline" class="task-input">
+            <mat-label>Task Assignment</mat-label>
+            <input matInput formControlName="taskName" placeholder="Type a task...">
+          </mat-form-field>
+          
+        </div>
+      </div>
+    </form>
+  </mat-dialog-content>
+
+  <mat-dialog-actions align="end">
+    <button mat-button (click)="onCancel()">Cancel</button>
+    <button mat-flat-button color="primary" [disabled]="taskForm.invalid" (click)="onSubmit()">
+      Save Assignments
+    </button>
+  </mat-dialog-actions>
+</div>

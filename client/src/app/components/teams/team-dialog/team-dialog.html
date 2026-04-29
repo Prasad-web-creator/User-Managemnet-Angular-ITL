@@ -1,0 +1,66 @@
+<div class="dialog-container">
+  <div class="dialog-header">
+    <h2 mat-dialog-title>{{ isEditMode ? 'Edit Team' : 'Create New Team' }}</h2>
+    <button mat-icon-button (click)="onCancel()" class="close-btn">
+      <mat-icon>close</mat-icon>
+    </button>
+  </div>
+
+  <mat-dialog-content>
+    <div class="no-pm-warning" *ngIf="!hasProjectManagers">
+      <mat-icon>warning</mat-icon>
+      Cannot create or edit team: No users with the "Project Manager" role exist in the system. Please create a Project Manager first.
+    </div>
+
+    <form [formGroup]="teamForm" class="team-form" *ngIf="hasProjectManagers">
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>Team Name</mat-label>
+        <input matInput formControlName="name" placeholder="Enter team name">
+        <mat-error *ngIf="teamForm.get('name')?.hasError('required')">Team name is required</mat-error>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>Project Name</mat-label>
+        <input matInput formControlName="projectName" placeholder="Enter project name">
+        <mat-error *ngIf="teamForm.get('projectName')?.hasError('required')">Project name is required</mat-error>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>Project Manager</mat-label>
+        <mat-select formControlName="projectManager">
+          <mat-option *ngFor="let pm of projectManagers" [value]="pm._id">
+            {{ pm.fullName }} <span *ngIf="pm.role" class="user-role-text">- {{ pm.role }}</span>
+          </mat-option>
+        </mat-select>
+        <mat-error *ngIf="teamForm.get('projectManager')?.hasError('required')">A team must have a project manager</mat-error>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>Team Leader</mat-label>
+        <mat-select formControlName="leader">
+          <mat-option *ngFor="let user of leaderCandidates" [value]="user._id">
+            {{ user.fullName }} <span *ngIf="user.role" class="user-role-text">- {{ user.role }}</span>
+          </mat-option>
+        </mat-select>
+        <mat-error *ngIf="teamForm.get('leader')?.hasError('required')">Team leader is required</mat-error>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>Team Members</mat-label>
+        <mat-select formControlName="members" multiple>
+          <mat-option *ngFor="let user of memberCandidates" [value]="user._id">
+            {{ user.fullName }} <span *ngIf="user.role" class="user-role-text">- {{ user.role }}</span>
+          </mat-option>
+        </mat-select>
+      </mat-form-field>
+
+    </form>
+  </mat-dialog-content>
+
+  <mat-dialog-actions align="end">
+    <button mat-button (click)="onCancel()">Cancel</button>
+    <button mat-flat-button color="primary" [disabled]="teamForm.invalid || !hasProjectManagers" (click)="onSubmit()">
+      {{ isEditMode ? 'Save Changes' : 'Create Team' }}
+    </button>
+  </mat-dialog-actions>
+</div>

@@ -27,7 +27,7 @@ export class ProfileComponent implements OnInit {
   constructor(
     private route: ActivatedRoute,
     private router: Router,
-    private dataService: DataService
+    public dataService: DataService
   ) {}
 
   ngOnInit() {

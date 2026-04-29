@@ -13,11 +13,11 @@
         <div class="status-indicator" [ngClass]="user.status?.toLowerCase() === 'inactive' ? 'inactive' : 'active'" [title]="user.status || 'Active'"></div>
       </div>
     </div>
-    
+
     <div class="profile-content">
       <div class="profile-header">
         <h1>{{ user.fullName }}</h1>
-        <span class="role-badge">{{ user.role }}</span>
+        <span class="role-badge" [ngStyle]="dataService.getRoleBadgeStyle(user.role)">{{ user.role }}</span>
       </div>
 
       <div class="details-grid">

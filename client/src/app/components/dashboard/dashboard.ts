@@ -1,13 +1,12 @@
 // src/app/dashboard/dashboard.component.ts
 import { Component, OnInit, AfterViewInit, ViewChild, ElementRef, ChangeDetectorRef } from '@angular/core';
-
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
 import { faUsers, faCircle, faStar, faBuilding } from '@fortawesome/free-solid-svg-icons';
 import { IconDefinition } from '@fortawesome/fontawesome-svg-core';
-import { DataService, Stat, User } from '../../services/data.service';
-import { Observable } from 'rxjs';
+import { DataService, Stat, User, Role } from '../../services/data.service';
+import { Observable, combineLatest } from 'rxjs';
 
 import { Chart, registerables } from 'chart.js';
 
@@ -58,6 +57,7 @@ export class DashboardComponent implements OnInit, AfterViewInit {
     setTimeout(() => {
       this.dataService.refreshUsers();
       this.dataService.refreshRoles();
+      this.dataService.refreshUserStats();
     });
   }
 
@@ -67,30 +67,49 @@ export class DashboardComponent implements OnInit, AfterViewInit {
 
 
   ngAfterViewInit(): void {
-    this.users$.subscribe(users => {
-      if (users && users.length > 0) {
-        this.createCharts(users);
+    combineLatest([
+      this.dataService.userStats$,
+      this.dataService.roles$
+    ]).subscribe(([stats, allRoles]) => {
+      // Ensure we have data before creating charts
+      if (stats && allRoles) {
+        this.createChartsFromStats(stats, allRoles);
         this.cdr.detectChanges();
       }
     });
   }
 
 
-  createCharts(users: User[]): void {
+  createChartsFromStats(stats: any, allRoles: Role[]): void {
     // 1. Process Roles Data
     const roles: { [key: string]: number } = {};
-    users.forEach(user => {
-      roles[user.role] = (roles[user.role] || 0) + 1;
+    
+    // Initialize all roles from the database with 0 users
+    allRoles.forEach(role => {
+      roles[role.name] = stats.roles[role.name] || 0;
     });
 
+    // Handle 'Unassigned' or any roles not in allRoles but in stats
+    Object.keys(stats.roles).forEach(roleName => {
+      if (roles[roleName] === undefined) {
+        roles[roleName] = stats.roles[roleName];
+      }
+    });
+
+    const roleLabels = Object.keys(roles);
+    const roleValues = Object.values(roles);
+
+    if (roleLabels.length > 0) {
+      this.renderRoleChart(roleLabels, roleValues);
+    }
+    
     // 2. Process Departments Data
-    const depts: { [key: string]: number } = {};
-    users.forEach(user => {
-      depts[user.department] = (depts[user.department] || 0) + 1;
-    });
-
-    this.renderRoleChart(Object.keys(roles), Object.values(roles));
-    this.renderDeptChart(Object.keys(depts), Object.values(depts));
+    const deptLabels = Object.keys(stats.departments);
+    const deptValues = Object.values(stats.departments) as number[];
+    
+    if (deptLabels.length > 0) {
+      this.renderDeptChart(deptLabels, deptValues);
+    }
   }
 
   renderRoleChart(labels: string[], data: number[]): void {
@@ -102,9 +121,12 @@ export class DashboardComponent implements OnInit, AfterViewInit {
         labels: labels,
         datasets: [{
           data: data,
-          backgroundColor: ['#6366f1', '#ec4899', '#f59e0b', '#10b981', '#3b82f6'],
+          backgroundColor: [
+            '#6366f1', '#ec4899', '#f59e0b', '#10b981', '#3b82f6',
+            '#8b5cf6', '#f43f5e', '#fb923c', '#2dd4bf', '#0ea5e9'
+          ],
           borderWidth: 0,
-          hoverOffset: 15
+          hoverOffset: 5
         }]
       },
       options: {

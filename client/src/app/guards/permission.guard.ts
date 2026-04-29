@@ -32,6 +32,8 @@ export const permissionGuard: CanActivateFn = (route, state) => {
       else if (path === 'users') hasAccess = !!perms?.viewUsers;
       else if (path === 'dashboard') hasAccess = !!perms?.dashboard;
       else if (path === 'activity-log') hasAccess = !!perms?.viewActivityLog;
+      else if (path === 'teams') hasAccess = !!perms?.teams;
+      else if (path === 'projects') hasAccess = !!perms?.projects;
       else hasAccess = user.role === 'Admin'; // Fallback for other admin routes
 
       if (hasAccess) {

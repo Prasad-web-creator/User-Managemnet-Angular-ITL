@@ -3,7 +3,7 @@
 
 
 .users-container {
-  padding: 1.5rem;
+  padding: 30px;
   width: 100%;
   margin: 0;
 
@@ -25,17 +25,20 @@
       color: #333;
       margin-bottom: 0.5rem;
     }
+
     p {
       color: #666;
     }
   }
 
-  .loading-state, .error-state, .empty-state {
+  .loading-state,
+  .error-state,
+  .empty-state {
     text-align: center;
     padding: 4rem 2rem;
     background: white;
     border-radius: 8px;
-    box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
 
     .spinner {
       margin: 0 auto 1rem;
@@ -60,7 +63,7 @@
 
   .material-table-container {
     padding: 1rem;
-    
+
     @media (max-width: 600px) {
       padding: 5px;
     }
@@ -80,26 +83,28 @@
         gap: 1rem;
         flex: 1;
         width: 100%;
-        
+
         @media (max-width: 768px) {
           flex-direction: column;
           gap: 0.5rem;
         }
-        
+
         .filter-field {
           flex: 2;
           min-width: 200px;
         }
-        
+
         .sort-field {
           flex: 1;
           min-width: 160px;
         }
 
         @media (max-width: 768px) {
-          .filter-field, .sort-field {
+
+          .filter-field,
+          .sort-field {
             font-size: 12px !important;
-            
+
             ::ng-deep .mat-mdc-form-field-label {
               font-size: 12px !important;
             }
@@ -109,8 +114,6 @@
             }
           }
         }
-
-
       }
 
 
@@ -151,7 +154,8 @@
         background-color: #f9fafb;
       }
 
-      .role-badge, .status-badge {
+      .role-badge,
+      .status-badge {
         padding: 0.25rem 0.75rem;
         border-radius: 9999px;
         font-size: 0.75rem;
@@ -160,20 +164,41 @@
       }
 
       .role-badge {
-        &.admin { background: #e0e7ff; color: #4338ca; }
-        &.hr { background: #fef3c7; color: #92400e; }
-        &.employee { background: #f3f4f6; color: #374151; }
+        background: #f1f5f9;
+        color: #475569;
+
+        &.admin {
+          background: #e0e7ff;
+          color: #4338ca;
+        }
+
+        &.hr {
+          background: #fef3c7;
+          color: #92400e;
+        }
+
+        &.employee {
+          background: #f3f4f6;
+          color: #374151;
+        }
       }
 
       .status-badge {
-        &.active { background: #d1fae5; color: #065f46; }
-        &.inactive { background: #fee2e2; color: #991b1b; }
+        &.active {
+          background: #d1fae5;
+          color: #065f46;
+        }
+
+        &.inactive {
+          background: #fee2e2;
+          color: #991b1b;
+        }
       }
 
       .no-actions {
         text-align: center;
         padding: 4px;
-        
+
         .text-muted {
           color: #9ca3af;
           font-size: 0.85rem;
@@ -182,9 +207,10 @@
       }
 
       @media (max-width: 600px) {
-        .mat-mdc-cell, 
+
+        .mat-mdc-cell,
         .mat-mdc-header-cell,
-        .role-badge, 
+        .role-badge,
         .status-badge {
           font-size: 12px !important;
           padding: 8px 4px !important;
@@ -200,11 +226,23 @@
 
 
 @keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
+  0% {
+    transform: rotate(0deg);
+  }
+
+  100% {
+    transform: rotate(360deg);
+  }
 }
 
 @keyframes slideInRight {
-  from { opacity: 0; transform: translateX(20px); }
-  to { opacity: 1; transform: translateX(0); }
+  from {
+    opacity: 0;
+    transform: translateX(20px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
 }

@@ -1,0 +1,79 @@
+<div class="view-dialog-container">
+  <div class="dialog-header">
+    <div class="header-content">
+      <div class="team-icon">
+        <mat-icon>groups</mat-icon>
+      </div>
+      <div class="title-section">
+        <h2>{{ team.name }}</h2>
+        <span class="project-badge">{{ team.projectName || 'Internal Project' }}</span>
+      </div>
+    </div>
+    <button mat-icon-button (click)="onClose()" class="close-btn">
+      <mat-icon>close</mat-icon>
+    </button>
+  </div>
+
+  <mat-dialog-content>
+    <!-- Project Overview Section -->
+    <div class="info-section">
+      <h3><mat-icon>assignment</mat-icon> Project Overview</h3>
+      <div class="info-grid">
+        <div class="info-item">
+          <span class="label">Project Manager</span>
+          <span class="value">{{ getUserName(team.projectManager) }}</span>
+        </div>
+        <div class="info-item">
+          <span class="label">Created Date</span>
+          <span class="value">{{ team.createdAt | date:'mediumDate' }}</span>
+        </div>
+      </div>
+    </div>
+
+    <mat-divider></mat-divider>
+
+    <!-- Team Leadership Section -->
+    <div class="info-section">
+      <h3><mat-icon>star</mat-icon> Team Leadership</h3>
+      <div class="user-card leader-card" *ngIf="team.leader">
+        <div class="user-info">
+          <div class="avatar">{{ getUserAvatar(team.leader) }}</div>
+          <div class="details">
+            <span class="name">{{ getUserName(team.leader) }}</span>
+            <span class="role">Team Leader</span>
+          </div>
+        </div>
+        <div class="task-box">
+          <span class="task-label">Assigned Task:</span>
+          <p class="task-text">{{ getTaskForUser(team.leader) }}</p>
+        </div>
+      </div>
+    </div>
+
+    <mat-divider></mat-divider>
+
+    <!-- Team Members Section -->
+    <div class="info-section">
+      <h3><mat-icon>people</mat-icon> Team Members ({{ team.members.length || 0 }})</h3>
+      <div class="members-grid">
+        <div class="user-card member-card" *ngFor="let member of team.members">
+          <div class="user-info">
+            <div class="avatar">{{ getUserAvatar(member) }}</div>
+            <div class="details">
+              <span class="name">{{ getUserName(member) }}</span>
+              <span class="role">Member</span>
+            </div>
+          </div>
+          <div class="task-box">
+            <span class="task-label">Assigned Task:</span>
+            <p class="task-text">{{ getTaskForUser(member) }}</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </mat-dialog-content>
+
+  <mat-dialog-actions align="end">
+    <button mat-flat-button color="primary" (click)="onClose()">Close Details</button>
+  </mat-dialog-actions>
+</div>

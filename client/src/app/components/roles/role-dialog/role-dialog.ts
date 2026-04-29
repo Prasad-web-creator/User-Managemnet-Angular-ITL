@@ -44,7 +44,9 @@ export class RoleDialogComponent implements OnInit {
         deleteUsers: [this.data?.permissions?.deleteUsers || false],
         roles: [this.data?.permissions?.roles || false],
         addUser: [this.data?.permissions?.addUser || false],
-        viewActivityLog: [this.data?.permissions?.viewActivityLog || false]
+        viewActivityLog: [this.data?.permissions?.viewActivityLog || false],
+        teams: [this.data?.permissions?.teams || false],
+        projects: [this.data?.permissions?.projects || false]
       })
     });
   }

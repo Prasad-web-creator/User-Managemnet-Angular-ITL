@@ -2,7 +2,7 @@ import { Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule, Router, NavigationEnd } from '@angular/router';
 import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
-import { faChartLine, faUserPlus, faUsers, faSignOutAlt, faBars, faTimes, faShieldAlt, faHistory, faExclamationTriangle } from '@fortawesome/free-solid-svg-icons';
+import { faChartLine, faUserPlus, faUsers, faSignOutAlt, faBars, faTimes, faShieldAlt, faHistory, faExclamationTriangle, faPeopleGroup, faFolder } from '@fortawesome/free-solid-svg-icons';
 import { DataService, Permissions } from '../services/data.service';
 import { Observable } from 'rxjs';
 
@@ -30,6 +30,8 @@ export class AppComponent {
   usersIcon = faUsers;
   rolesIcon = faShieldAlt;
   activityLogIcon = faHistory;
+  teamsIcon = faPeopleGroup;
+  projectsIcon = faFolder;
   logoutIcon = faSignOutAlt;
   menuIcon = faBars;
   closeIcon = faTimes;

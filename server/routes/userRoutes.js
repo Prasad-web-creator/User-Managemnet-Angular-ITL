@@ -1,5 +1,5 @@
 const express = require('express');
-const { getUsers, createUser, getUser, loginUser, updateUser, deleteUser, deleteMultipleUsers, resetPassword } = require('../controllers/userController');
+const { getUsers, createUser, getUser, loginUser, updateUser, deleteUser, deleteMultipleUsers, resetPassword, getUserStats } = require('../controllers/userController');
 const { protect, authorize, checkPermission } = require('../middleware/authMiddleware');
 
 
@@ -8,6 +8,7 @@ const router = express.Router();
 
 router.post('/login', loginUser);
 router.post('/reset-password', resetPassword);
+router.get('/stats', getUserStats);
 
 // Apply protection to all routes below
 router.use(protect);

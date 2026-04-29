@@ -10,6 +10,7 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSnackBarModule } from '@angular/material/snack-bar';
 import { DataService, Role } from '../../services/data.service';
 import { RoleDialogComponent } from './role-dialog/role-dialog';
+import { ConfirmDialogComponent } from '../shared/confirm-dialog';
 
 @Component({
   selector: 'app-roles',
@@ -29,7 +30,7 @@ import { RoleDialogComponent } from './role-dialog/role-dialog';
   styleUrl: './roles.scss'
 })
 export class RolesComponent implements OnInit {
-  private dataService = inject(DataService);
+  public dataService = inject(DataService);
   private dialog = inject(MatDialog);
 
   dataSource = new MatTableDataSource<Role>([]);
@@ -77,10 +78,19 @@ export class RolesComponent implements OnInit {
   }
 
   deleteRole(role: Role): void {
-    if (confirm(`Are you sure you want to delete the role "${role.name}"?`)) {
-      if (role._id) {
+    const dialogRef = this.dialog.open(ConfirmDialogComponent, {
+      width: '400px',
+      data: {
+        title: 'Delete Role',
+        message: `Are you sure you want to delete the role "${role.name}"? This action cannot be undone.`,
+      },
+      backdropClass: 'blur-backdrop'
+    });
+
+    dialogRef.afterClosed().subscribe((confirmed) => {
+      if (confirmed && role._id) {
         this.dataService.deleteRole(role._id).subscribe();
       }
-    }
+    });
   }
 }

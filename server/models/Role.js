@@ -17,7 +17,9 @@ const roleSchema = new mongoose.Schema({
     deleteUsers: { type: Boolean, default: false },
     roles: { type: Boolean, default: false },
     addUser: { type: Boolean, default: false },
-    viewActivityLog: { type: Boolean, default: false }
+    viewActivityLog: { type: Boolean, default: false },
+    teams: { type: Boolean, default: false },
+    projects: { type: Boolean, default: false }
   },
   createdAt: {
     type: Date,

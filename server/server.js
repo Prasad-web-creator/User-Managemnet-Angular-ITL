@@ -20,11 +20,13 @@ mongoose.connect(process.env.MONGODB_URI)
   .catch((err) => console.error('MongoDB connection error:', err));
 
 const activityRoutes = require('./routes/activityRoutes');
+const teamRoutes = require('./routes/teamRoutes');
 
 // Routes
 app.use('/api/users', userRoutes);
 app.use('/api/roles', roleRoutes);
 app.use('/api/activities', activityRoutes);
+app.use('/api/teams', teamRoutes);
 
 // Root route
 app.get('/', (req, res) => {

@@ -40,6 +40,8 @@ export interface Permissions {
   roles: boolean;
   addUser: boolean;
   viewActivityLog: boolean;
+  teams: boolean;
+  projects: boolean;
 }
 
 export interface Role {
@@ -59,6 +61,24 @@ export interface ActivityLog {
   timestamp: string;
 }
 
+export interface Team {
+  _id?: string;
+  name: string;
+  projectName?: string;
+  projectManager?: User | string;
+  leader: User | string;
+  members: (User | string)[];
+  tasks?: { user: User | string; taskName: string }[];
+  createdAt?: string;
+}
+
+export interface PaginationMetadata {
+  total: number;
+  page: number;
+  limit: number;
+  pages: number;
+}
+
 @Injectable({
   providedIn: 'root'
 })
@@ -70,13 +90,14 @@ export class DataService {
     users: '/users',
     stats: '/stats',
     roles: '/roles',
-    activities: '/activities'
+    activities: '/activities',
+    teams: '/teams'
   };
 
   // --- Constants ---
   readonly TABLE_COLUMNS : string[] = [
     'select', 'fullName', 'username', 'email', 'department', 
-    'role', 'status', 'joiningDate', 'actions'
+    'role', 'status', 'joiningDate', 'address', 'actions'
   ];
 
   readonly PATTERNS = {
@@ -110,9 +131,18 @@ export class DataService {
   ]);
 
   private usersSubject = new BehaviorSubject<User[]>([]);
+  private usersPaginationSubject = new BehaviorSubject<PaginationMetadata | null>(null);
+  public usersPagination$ = this.usersPaginationSubject.asObservable();
 
   private rolesSubject = new BehaviorSubject<Role[]>([]);
   public roles$ = this.rolesSubject.asObservable();
+
+  private teamsSubject = new BehaviorSubject<Team[]>([]);
+  private teamsPaginationSubject = new BehaviorSubject<PaginationMetadata | null>(null);
+  public teamsPagination$ = this.teamsPaginationSubject.asObservable();
+
+  private userStatsSubject = new BehaviorSubject<any>(null);
+  public userStats$ = this.userStatsSubject.asObservable();
 
   private departmentsSubject = new BehaviorSubject<string[]>(['Engineering', 'HR', 'Finance', 'Sales']);
 
@@ -129,6 +159,7 @@ export class DataService {
 
   dashboardStats$ = this.dashboardStatsSubject.asObservable();
   users$ = this.usersSubject.asObservable();
+  teams$ = this.teamsSubject.asObservable();
 
   constructor(private http: HttpClient, private snackBar: MatSnackBar) {
     // Load permissions from localStorage if available
@@ -136,6 +167,25 @@ export class DataService {
     if (savedPermissions) {
       this.userPermissionsSubject.next(JSON.parse(savedPermissions));
     }
+  }
+
+  getRoleBadgeStyle(roleName: string): any {
+    if (!roleName) return {};
+    const name = roleName.toLowerCase();
+    // Keep predefined ones for consistency
+    if (name === 'admin') return { background: '#e0e7ff', color: '#4338ca' };
+    if (name === 'hr') return { background: '#fef3c7', color: '#92400e' };
+    if (name === 'employee') return { background: '#dcfce7', color: '#166534' };
+
+    let hash = 0;
+    for (let i = 0; i < name.length; i++) {
+      hash = name.charCodeAt(i) + ((hash << 5) - hash);
+    }
+    const h = Math.abs(hash) % 360;
+    return {
+      background: `hsl(${h}, 70%, 90%)`,
+      color: `hsl(${h}, 70%, 30%)`
+    };
   }
 
   // --- Notifications ---
@@ -163,11 +213,19 @@ export class DataService {
   }
 
   // --- Data Logic ---
-  refreshUsers(): void {
+  refreshUsers(params: any = {}): void {
     this.loadingSubject.next(true);
     this.errorSubject.next(null);
 
-    this.http.get<{success: boolean, data: User[]}>(`${this.api}${this.apiEndpoints.users}`).pipe(
+    // Convert params to query string
+    const queryParams = new URLSearchParams();
+    Object.keys(params).forEach(key => {
+      if (params[key]) queryParams.set(key, params[key]);
+    });
+
+    const url = `${this.api}${this.apiEndpoints.users}${queryParams.toString() ? '?' + queryParams.toString() : ''}`;
+
+    this.http.get<{success: boolean, data: User[], pagination: PaginationMetadata}>(url).pipe(
       catchError(err => {
         const msg = err.message || 'Failed to fetch users';
         this.errorSubject.next(msg);
@@ -178,7 +236,9 @@ export class DataService {
       next: (response) => {
         if (response?.success) {
           this.usersSubject.next(response.data);
-          this.calculateStats(response.data);
+          this.usersPaginationSubject.next(response.pagination);
+          // Trigger global stats refresh
+          this.refreshUserStats();
         }
       }
     });
@@ -192,9 +252,23 @@ export class DataService {
     );
   }
 
-  private calculateStats(users: User[]): void {
-    const total = users.length;
-    const active = users.filter(u => u.status?.toLowerCase() === 'active').length;
+  /**
+   * Fetches global user statistics (role/department distribution)
+   */
+  public refreshUserStats(): void {
+    this.http.get<{success: boolean, data: any}>(`${this.api}${this.apiEndpoints.users}/stats`).subscribe({
+      next: (res) => {
+        if (res.success) {
+          this.userStatsSubject.next(res.data);
+          this.calculateStats(res.data.totalUsers, res.data.activeUsers);
+        }
+      }
+    });
+  }
+
+  private calculateStats(totalCount: number, activeCount: number): void {
+    const total = totalCount;
+    const active = activeCount;
     const activePct = total > 0 ? Math.round((active / total) * 100) : 0;
     
     const stats = this.dashboardStatsSubject.value.map(stat => {
@@ -295,7 +369,7 @@ export class DataService {
       next: (response) => {
         if (response?.success) {
           this.rolesSubject.next(response.data);
-          this.calculateStats(this.usersSubject.value);
+          this.refreshUserStats();
         }
       }
     });
@@ -355,6 +429,85 @@ export class DataService {
   // Activity Log
   getActivities(): Observable<{success: boolean, data: ActivityLog[]}> {
     return this.http.get<{success: boolean, data: ActivityLog[]}>(`${this.api}${this.apiEndpoints.activities}`);
+  }
+
+  // --- Teams ---
+  refreshTeams(params: any = {}): void {
+    this.loadingSubject.next(true);
+
+    const queryParams = new URLSearchParams();
+    Object.keys(params).forEach(key => {
+      if (params[key]) queryParams.set(key, params[key]);
+    });
+
+    const url = `${this.api}${this.apiEndpoints.teams}${queryParams.toString() ? '?' + queryParams.toString() : ''}`;
+
+    this.http.get<{success: boolean, data: Team[], pagination: PaginationMetadata}>(url).pipe(
+      catchError(err => this.handleError(err)),
+      finalize(() => this.loadingSubject.next(false))
+    ).subscribe({
+      next: (response) => {
+        if (response?.success) {
+          this.teamsSubject.next(response.data);
+          this.teamsPaginationSubject.next(response.pagination);
+        }
+      }
+    });
+  }
+
+  addTeam(team: any): Observable<any> {
+    return this.http.post<any>(`${this.api}${this.apiEndpoints.teams}`, team).pipe(
+      tap(res => {
+        if (res.success) {
+          this.showNotification('Team created successfully!', 'success');
+          this.refreshTeams();
+        }
+      }),
+      catchError(err => this.handleError(err))
+    );
+  }
+
+  updateTeam(teamId: string, team: any): Observable<any> {
+    return this.http.put<any>(`${this.api}${this.apiEndpoints.teams}/${teamId}`, team).pipe(
+      tap(res => {
+        if (res.success) {
+          this.showNotification('Team updated successfully.', 'success');
+          this.refreshTeams();
+        }
+      }),
+      catchError(err => this.handleError(err))
+    );
+  }
+
+  deleteTeam(teamId: string): Observable<any> {
+    return this.http.delete<any>(`${this.api}${this.apiEndpoints.teams}/${teamId}`).pipe(
+      tap(res => {
+        if (res.success) {
+          this.showNotification('Team deleted successfully.', 'success');
+          this.refreshTeams();
+        }
+      }),
+      catchError(err => this.handleError(err))
+    );
+  }
+
+  deleteMultipleTeams(teamIds: string[]): Observable<any> {
+    this.loadingSubject.next(true);
+    return this.http.post<any>(`${this.api}${this.apiEndpoints.teams}/delete-multiple`, {
+      ids: teamIds
+    }).pipe(
+      tap(res => {
+        if (res.success) {
+          this.showNotification(`${res.deletedCount} teams deleted successfully.`, 'success');
+          this.refreshTeams();
+        }
+      }),
+      catchError(err => {
+        this.showNotification('Failed to delete multiple teams.', 'error');
+        return this.handleError(err);
+      }),
+      finalize(() => this.loadingSubject.next(false))
+    );
   }
 
   // --- Helpers ---
